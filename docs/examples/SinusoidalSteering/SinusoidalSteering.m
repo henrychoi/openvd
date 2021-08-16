@@ -10,7 +10,7 @@
 % .. code-block:: matlab
 
 TireModel = TirePacejka();          % Choosing tire
-System = VehicleSimpleNonlinear();  % Choosing vehicle
+System = V2Nonlinear();  % Choosing vehicle
 
 % The system is completely defined once we attribute the chosen tire model to the vehicle object.
 %

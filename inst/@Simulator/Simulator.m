@@ -15,24 +15,22 @@ classdef Simulator<handle
                 self.ALPHAT0 = 0;
                 self.dPSI0 = 0;
                 self.dPHI0 = 0;
+            elseif isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')
+                self.X0 = 0;
+                self.Y0 = 0;
+                self.PSI0 = 0;
+                self.THETA0 = 0;
+                self.V0 = 20;
+                self.ALPHAT0 = 0;
+                self.dPSI0 = 0;
+                self.dTHETA0 = 0;
             else
-                if isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')
-                    self.X0 = 0;
-                    self.Y0 = 0;
-                    self.PSI0 = 0;
-                    self.THETA0 = 0;
-                    self.V0 = 20;
-                    self.ALPHAT0 = 0;
-                    self.dPSI0 = 0;
-                    self.dTHETA0 = 0;
-                else
-                    self.X0 = 0;
-                    self.Y0 = 0;
-                    self.PSI0 = 0;
-                    self.V0 = 20;
-                    self.ALPHAT0 = 0;
-                    self.dPSI0 = 0;
-                end
+                self.X0 = 0;
+                self.Y0 = 0;
+                self.PSI0 = 0;
+                self.V0 = 20;
+                self.ALPHAT0 = 0;
+                self.dPSI0 = 0;
             end
         end
 
@@ -40,15 +38,12 @@ classdef Simulator<handle
             % Transforms properties into a vector so it can be used by the integrator
             if isa(self.Vehicle, 'VehicleArticulated')
                 f = [self.X0 self.Y0 self.PSI0 self.PHI0 self.V0 self.ALPHAT0 self.dPSI0 self.dPHI0];
+            elseif isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')
+                f = [self.X0 self.Y0 self.PSI0 self.THETA0 self.V0 self.ALPHAT0 self.dPSI0 self.dTHETA0];
             else
-                if isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')
-                    f = [self.X0 self.Y0 self.PSI0 self.THETA0 self.V0 self.ALPHAT0 self.dPSI0 self.dTHETA0];
-                else
-                    f = [self.X0 self.Y0 self.PSI0 self.V0 self.ALPHAT0 self.dPSI0];
-                end
+                f = [self.X0; self.Y0; self.PSI0; ...
+                    self.V0 * cos(self.ALPHAT0); self.V0 * sin(self.ALPHAT0); self.dPSI0];
             end
-
-
         end
 
         function Simulate(self)
@@ -73,35 +68,33 @@ classdef Simulator<handle
                 self.ALPHAT = XOUT(:, 6);
                 self.dPSI = XOUT(:, 7);
                 self.dPHI = XOUT(:, 8);
+            elseif isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')
+                fun = self.Vehicle;
+                funMass = @(t,states) fun.MassMatrix(t,states);
+                % TODO: add velocity fun to 4DOF
+                % funVelocity = @(t,states) fun.velocity(t,states);
+                options = odeset('Mass',funMass);
+                [TOUT, XOUT] = ode45(@(t, estados) self.Vehicle.Model(t, estados,self.TSpan), self.TSpan, self.getInitialState(), options);
+
+                % Retrieving states post integration
+                self.XT = XOUT(:, 1);
+                self.YT = XOUT(:, 2);
+                self.PSI = XOUT(:, 3);
+                self.THETA = XOUT(:, 4);
+                self.VEL = XOUT(:, 5);
+                self.ALPHAT = XOUT(:, 6);
+                self.dPSI = XOUT(:, 7);
+                self.dTHETA = XOUT(:, 8);
             else
-                if isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')
-                    fun = self.Vehicle;
-                    funMass = @(t,states) fun.MassMatrix(t,states);
-                    % TODO: add velocity fun to 4DOF
-                    % funVelocity = @(t,states) fun.velocity(t,states);
-                    options = odeset('Mass',funMass);
-                    [TOUT, XOUT] = ode45(@(t, estados) self.Vehicle.Model(t, estados,self.TSpan), self.TSpan, self.getInitialState(), options);
+                % simulate
+                [TOUT, XOUT] = ode45(@(t, estados) self.Vehicle.Model(t, estados,self.TSpan), self.TSpan, self.getInitialState());
 
-                    % Retrieving states post integration
-                    self.XT = XOUT(:, 1);
-                    self.YT = XOUT(:, 2);
-                    self.PSI = XOUT(:, 3);
-                    self.THETA = XOUT(:, 4);
-                    self.VEL = XOUT(:, 5);
-                    self.ALPHAT = XOUT(:, 6);
-                    self.dPSI = XOUT(:, 7);
-                    self.dTHETA = XOUT(:, 8);
-                else
-                    [TOUT, XOUT] = ode45(@(t, estados) self.Vehicle.Model(t, estados,self.TSpan), self.TSpan, self.getInitialState());
-
-                    % Retrieving states post integration
-                    self.XT = XOUT(:, 1);
-                    self.YT = XOUT(:, 2);
-                    self.PSI = XOUT(:, 3);
-                    self.VEL = XOUT(:, 4);
-                    self.ALPHAT = XOUT(:, 5);
-                    self.dPSI = XOUT(:, 6);
-                end
+                self.XT = XOUT(:, 1); % Retrieving result after simulation
+                self.YT = XOUT(:, 2);
+                self.PSI = XOUT(:, 3);
+                self.VEL = sqrt(XOUT(:, 4).^2 + XOUT(:, 5).^2);
+                self.ALPHAT = atan(XOUT(:, 5) ./ XOUT(:, 4));
+                self.dPSI = XOUT(:, 6);
             end
 
             % TSpan and TOUT contain the same values, but the first is passed in columns, while the second is a vector

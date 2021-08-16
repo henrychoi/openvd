@@ -17,7 +17,7 @@
 % .. code-block:: matlab
 
 TireModel = TirePacejka();          % Choosing tire
-System = VehicleSimpleNonlinear();  % Choosing vehicle
+System = V2Nonlinear();  % Choosing vehicle
 
 % The default parameters of the vehicle and tire model can be seen in :mod:`VehicleSimpleNonlinear` and :mod:`TirePacejka`, respectively.
 %
@@ -41,8 +41,8 @@ System.muy = .8;
 % .. code-block:: matlab
 
 System.deltaf = 20*pi/180;
-System.Fxf = 0;
-System.Fxr = @VelControl;
+System.Fxf = @VelControl; % front wheel drive
+System.Fxr = 0; % Rear wheel drive
 
 % When the input variables are defined as a scalar quantity, the attributed value remains the same for the entire simulation span. However, we can see that the longitudinal force of the rear axle recieves the handle of the :ref:`velcontrol-skidpad` function.
 %
