@@ -6,7 +6,7 @@ classdef Simulator<handle
         function self = Simulator(vehicle, tspan)
             self.Vehicle = vehicle;
             self.TSpan = tspan;
-            if isa(self.Vehicle, 'VehicleArticulated')
+            if isa(self.Vehicle, 'ArticulatedNonlinear')
                 self.X0 = 0;
                 self.Y0 = 0;
                 self.PSI0 = 0;
@@ -36,13 +36,16 @@ classdef Simulator<handle
 
         function f = getInitialState(self)
             % Transforms properties into a vector so it can be used by the integrator
-            if isa(self.Vehicle, 'VehicleArticulated')
-                f = [self.X0 self.Y0 self.PSI0 self.PHI0 self.V0 self.ALPHAT0 self.dPSI0 self.dPHI0];
+            if isa(self.Vehicle, 'ArticulatedNonlinear')
+                f = [self.X0, self.Y0, self.PSI0, self.PHI0, ...
+                self.V0 * cos(self.ALPHAT0), self.V0 * sin(self.ALPHAT0), ...
+                    self.dPSI0, self.dPHI0];
             elseif isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')
                 f = [self.X0 self.Y0 self.PSI0 self.THETA0 self.V0 self.ALPHAT0 self.dPSI0 self.dTHETA0];
             else
-                f = [self.X0; self.Y0; self.PSI0; ...
-                    self.V0 * cos(self.ALPHAT0); self.V0 * sin(self.ALPHAT0); self.dPSI0];
+                f = [self.X0, self.Y0, self.PSI0, ...
+                    self.V0 * cos(self.ALPHAT0), self.V0 * sin(self.ALPHAT0), ...
+                    self.dPSI0];
             end
         end
 
@@ -51,7 +54,7 @@ classdef Simulator<handle
 
             % integration
             % if vehicle is articulated, adds mass matrix as an integration option
-            if isa(self.Vehicle, 'VehicleArticulated')
+            if isa(self.Vehicle, 'ArticulatedNonlinear')
                 fun = self.Vehicle;
                 funMass = @(t,states) fun.MassMatrix(t,states);
                 funVelocity = @(t,states) fun.velocity(t,states);
@@ -64,8 +67,8 @@ classdef Simulator<handle
                 self.YT = XOUT(:, 2);
                 self.PSI = XOUT(:, 3);
                 self.PHI = XOUT(:, 4);
-                self.VEL = XOUT(:, 5);
-                self.ALPHAT = XOUT(:, 6);
+                self.VEL = sqrt(XOUT(:, 5).^2 + XOUT(:, 6).^2);
+                self.ALPHAT = atan(XOUT(:, 6) ./ XOUT(:, 5));
                 self.dPSI = XOUT(:, 7);
                 self.dPHI = XOUT(:, 8);
             elseif isa(self.Vehicle, 'VehicleSimpleNonlinear4DOF')

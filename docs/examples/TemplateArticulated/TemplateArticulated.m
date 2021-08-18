@@ -32,7 +32,7 @@ TireModel.a7 = 0.6;
 %
 % .. code-block:: matlab
 
-VehicleModel = VehicleArticulatedNonlinear();   % Choosing vehicle
+VehicleModel = ArticulatedNonlinear();   % Choosing vehicle
 
 % The vehicle parameters can be changed as
 %

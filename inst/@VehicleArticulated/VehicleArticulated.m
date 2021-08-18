@@ -18,10 +18,10 @@ classdef (Abstract) VehicleArticulated  < VehicleSimple
         IS  % Moment of inertia of the semitrailer [kg.m2]
         nM  % Number of tires in semitrailer axle
         wS  % Track of the semitrailer [m]
-        lS  % Distance from articulation to semitrailer axle (A-M) [m]
+        lS  % Distance from articulation to trailer axle (A-M = u+e) [m]
         c   % Distance from rear axle of the tractor to articulation (R-A) [m]
-        d   % Distance from articulation to semitrailer center of mass (A-M) [m]
-        e   % Distance from semitrailer center of mass to semitrailer axle (A-M) [m]
+        d   % Distance from articulation to semitrailer center of mass (u in my drawing) [m]
+        e   % Distance from semitrailer center of mass to semitrailer axle (B-M) [m]
         Fxm % Longitudinal force at M [rad]
     end
 

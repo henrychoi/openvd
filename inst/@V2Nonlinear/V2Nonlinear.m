@@ -72,19 +72,18 @@ classdef V2Nonlinear < VehicleSimple
                 FxR = self.Fxr;
             end
 
-            % Characteristic curve
+            % Lateral forces on EACH wheel
             FyF = nF * self.tire.Characteristic(ALPHAF, FzF/nF, muy);
             FyR = nR * self.tire.Characteristic(ALPHAR, FzR/nR, muy);
 
             % Equations of motion
             dx(1,1) = Vd * cos(PSI) - Vq * sin(PSI); % dx
             dx(2,1) = Vd * sin(PSI) + Vq * cos(PSI); % dy
-            dx(3,1) = dPSI; % dPSI
+            dx(3,1) = dPSI; % w
             % generalized forces Qd, Qq, Q\psi
             dx(4,1) = (FxF * cos(DELTA) - FyF * sin(DELTA) + FxR)/m;
             dx(5,1) = (FxF * sin(DELTA) + FyF * cos(DELTA) + FyR)/m;
             dx(6,1) = (FxF * a * sin(DELTA) + FyF * a * cos(DELTA) - FyR * b) / I;
-
         end
     end
 end
